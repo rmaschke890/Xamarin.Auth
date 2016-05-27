@@ -22,6 +22,8 @@ namespace Xamarin.Auth
     /// </summary>
     public sealed partial class WebAuthenticatorPage : Page
     {
+        private WebAuthenticator _auth;
+
         public WebAuthenticatorPage()
         {
             this.InitializeComponent();
@@ -29,13 +31,16 @@ namespace Xamarin.Auth
 
         protected override async void OnNavigatedTo(NavigationEventArgs e)
         {
-            OAuth2Authenticator auth = (OAuth2Authenticator)e.Parameter;
+            _auth = (OAuth2Authenticator)e.Parameter;
 
-            auth.Completed += auth_Completed;
-            auth.Error += OnAuthError;
+            _auth.Completed += auth_Completed;
+            _auth.Error += OnAuthError;
 
-            Uri uri = await auth.GetInitialUrlAsync();
+            Uri uri = await _auth.GetInitialUrlAsync();
             this.browser.Source = uri;
+
+            this.browser.NavigationCompleted += (sender, args) => { _auth.OnPageLoaded(args.Uri); };
+            this.browser.NavigationStarting += (sender, args) => { _auth.OnPageLoading(args.Uri); };
 
             /*
             string key = NavigationContext.QueryString["key"];
